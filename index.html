@@ -52,6 +52,77 @@
 
     .container { max-width: 640px; margin: 0 auto; }
 
+    /* === Экран входа === */
+    .auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg);
+      z-index: 9999;
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .auth-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .auth-card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .google-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 0.75rem;
+    }
+
+    .google-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .google-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .google-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .auth-hidden {
+      display: none !important;
+    }
+
     /* === Карточка своего профиля === */
     .my-card {
       background: var(--card-bg);
@@ -111,6 +182,24 @@
     .status-btn.active[data-status="online"]  { background: #dcfce7; border-color: var(--online);  color: #15803d; }
     .status-btn.active[data-status="offline"] { background: #f1f5f9; border-color: var(--offline); color: #475569; }
     .status-btn.active[data-status="busy"]    { background: #fef3c7; border-color: var(--busy);    color: #92400e; }
+
+    .logout-btn {
+      padding: 6px 14px;
+      background: #fee2e2;
+      border: 1.5px solid #fecaca;
+      color: #dc2626;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 0.75rem;
+    }
+
+    .logout-btn:hover {
+      background: #fca5a5;
+      border-color: #f87171;
+    }
 
     /* === Список пользователей === */
     .users-card {
@@ -228,7 +317,25 @@
 </head>
 <body>
 
-<header>
+<!-- Экран входа -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
+    <h2>Добро пожаловать</h2>
+    <p>Монитор статусов в реальном времени</p>
+    <button id="google-login-btn" class="google-btn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Войти через Google
+    </button>
+  </div>
+</div>
+
+<header class="auth-hidden" id="header">
   <div class="logo">💬</div>
   <div>
     <h1>Монитор статусов</h1>
@@ -236,7 +343,7 @@
   </div>
 </header>
 
-<div class="container">
+<div class="container auth-hidden" id="main-content">
 
   <!-- Своя карточка -->
   <div class="my-card">
@@ -253,6 +360,7 @@
       </div>
     </div>
     <button id="save-status">Сохранить статус</button>
+    <button id="logout-btn" class="logout-btn">Выйти</button>
   </div>
 
   <!-- Список всех пользователей -->
@@ -273,15 +381,18 @@
 <script>
   
   // ================================================
- 
+  // ⚠️  ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА ВАШИ
+  // ================================================
+  
   const SUPABASE_URL = 'https://wvejqgvrlyandnprjsak.supabase.co'
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWpxZ3ZybHlhbmRucHJqc2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MjczODEsImV4cCI6MjA5MTIwMzM4MX0.m7nsXes6n9EBlA0BH97F9erN7-TDLD6yayjOvMv6sdY'
-  const MY_ID = 'c95c7090-69f1-4dfa-b093-3d801e8bca53'   // id из таблицы profiles
+  
   // ================================================
 
   const { createClient } = supabase
   const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+  let currentUser = null
   let selectedStatus = null
 
   // --- UI helpers ---
@@ -300,6 +411,19 @@
     return { online: 'Онлайн', busy: 'Занят', offline: 'Офлайн' }[s] || s || '—'
   }
 
+  // --- Управление видимостью экранов ---
+  function showAuthScreen() {
+    document.getElementById('auth-screen').classList.remove('auth-hidden')
+    document.getElementById('header').classList.add('auth-hidden')
+    document.getElementById('main-content').classList.add('auth-hidden')
+  }
+
+  function showMainScreen() {
+    document.getElementById('auth-screen').classList.add('auth-hidden')
+    document.getElementById('header').classList.remove('auth-hidden')
+    document.getElementById('main-content').classList.remove('auth-hidden')
+  }
+
   // --- Рендер списка ---
   function renderUsers(rows) {
     const list = document.getElementById('user-list')
@@ -307,7 +431,7 @@
 
     list.innerHTML = rows.map(u => {
       const st = u.status || 'offline'
-      const me = u.id === MY_ID ? ' <span style="font-size:0.72rem;color:var(--muted)">(я)</span>' : ''
+      const me = u.id === currentUser.id ? ' <span style="font-size:0.72rem;color:var(--muted)">(я)</span>' : ''
       return `
         <div class="user-row">
           <div class="user-avatar">
@@ -320,14 +444,54 @@
     }).join('')
   }
 
-  // --- Загрузка данных ---
+  // --- Загрузка данных пользователя из БД ---
+  async function loadUserProfile(userId) {
+    const { data, error } = await db
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('Ошибка загрузки профиля:', error)
+      // Если профиля нет, создаём его
+      if (error.code === 'PGRST116') {
+        return await createUserProfile(userId)
+      }
+      return null
+    }
+
+    return data
+  }
+
+  // --- Создание профиля нового пользователя ---
+  async function createUserProfile(userId) {
+    const { data: authData } = await db.auth.getUser()
+    const email = authData?.user?.email || 'user'
+    const username = authData?.user?.user_metadata?.full_name || email.split('@')[0]
+
+    const { data, error } = await db
+      .from('profiles')
+      .insert({ id: userId, username, status: 'online', email })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Ошибка создания профиля:', error)
+      return null
+    }
+
+    return data
+  }
+
+  // --- Загрузка всех пользователей ---
   async function loadAll() {
     const { data, error } = await db.from('profiles').select('*')
     if (error) { showToast('Ошибка загрузки: ' + error.message); return }
 
     renderUsers(data)
 
-    const me = data.find(u => u.id === MY_ID)
+    const me = data.find(u => u.id === currentUser.id)
     if (me) {
       document.getElementById('my-username').textContent = me.username || 'Вы'
       document.getElementById('my-avatar').textContent = initials(me.username)
@@ -347,28 +511,99 @@
     btn.addEventListener('click', () => setActiveBtn(btn.dataset.status))
   })
 
-  // --- Сохранение ---
+  // --- Сохранение статуса ---
   document.getElementById('save-status').addEventListener('click', async () => {
     if (!selectedStatus) { showToast('Выберите статус'); return }
     const btn = document.getElementById('save-status')
     btn.disabled = true; btn.textContent = 'Сохраняем…'
 
-    const { error } = await db.from('profiles').update({ status: selectedStatus }).eq('id', MY_ID)
+    const { error } = await db
+      .from('profiles')
+      .update({ status: selectedStatus })
+      .eq('id', currentUser.id)
 
     btn.disabled = false; btn.textContent = 'Сохранить статус'
     if (error) showToast('Ошибка: ' + error.message)
     else showToast('Статус обновлён ✓')
   })
 
-  // --- Realtime подписка ---
-  db.channel('profiles-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-      loadAll()
-    })
-    .subscribe()
+  // --- Выход ---
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await db.auth.signOut()
+    currentUser = null
+    showAuthScreen()
+    showToast('Вы вышли из аккаунта')
+  })
 
-  // --- Старт ---
-  loadAll()
+  // --- Google вход ---
+  document.getElementById('google-login-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('google-login-btn')
+    btn.disabled = true
+    btn.textContent = 'Загрузка…'
+
+    const { data, error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname
+      }
+    })
+
+    if (error) {
+      showToast('Ошибка входа: ' + error.message)
+      btn.disabled = false
+      btn.textContent = 'Войти через Google'
+    }
+  })
+
+  // --- Realtime подписка ---
+  function subscribeToChanges() {
+    db.channel('profiles-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        loadAll()
+      })
+      .subscribe()
+  }
+
+  // --- Инициализация ---
+  async function init() {
+    // Проверяем, уже ли пользователь авторизован
+    const { data: { session } } = await db.auth.getSession()
+
+    if (!session) {
+      showAuthScreen()
+      return
+    }
+
+    // Пользователь авторизован
+    currentUser = session.user
+    const profile = await loadUserProfile(currentUser.id)
+
+    if (!profile) {
+      showToast('Ошибка загрузки профиля')
+      return
+    }
+
+    showMainScreen()
+    await loadAll()
+    subscribeToChanges()
+  }
+
+  // Слушаем изменения auth состояния
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      currentUser = null
+      showAuthScreen()
+    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      currentUser = session?.user
+      if (currentUser) {
+        showMainScreen()
+        init()
+      }
+    }
+  })
+
+  // Старт приложения
+  init()
 </script>
 </body>
 </html>
